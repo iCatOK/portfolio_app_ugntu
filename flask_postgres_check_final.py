@@ -58,7 +58,10 @@ album_toolbar = {
         'url': 'change_privacy',
         'album_id': 1
     },
-    'Удалить альбом': 'index',
+    'Удалить альбом': {
+        'url': 'delete_album',
+        'album_id': 1
+    },
 }
 
 # меню авторизированного пользователя - редактирование фото
@@ -80,6 +83,28 @@ def quit():
     menu = menu_in
     flash('Выход совершен')
     return redirect(url_for('index'))
+
+# удаление альбома
+@app.route('/myalbums/<int:album_id>/delete_album', methods=['GET', 'POST'])
+def delete_album(album_id):
+    album = db.session.query(Albums).filter_by(album_id=album_id).first()
+    if request.method == 'POST':
+        confirmed = True if request.form.get('confirmation') == 'on' else False
+        if(confirmed):
+            db.session.delete(album)
+            db.session.commit()
+            return redirect(url_for('my_albums'))
+        else:
+            return redirect(url_for('photos_of_current_user_album', album_id=album_id))
+    else:
+        if(current_user is not None):
+            return render_template('delete_confirm.html', nickname=current_user.nickname,
+                menu=menu, album_id = album_id,
+                album_name = album_toolbar['Добавить фото']['album_name'], 
+                is_not_toolbar = True)
+        else:
+            flash('Анонимный пользователь', 'error')
+            return redirect(url_for('index'))
 
 # редактирование приватности альбома
 @app.route('/myalbums/<int:album_id>/change_privacy', methods=['GET', 'POST'])
@@ -314,10 +339,3 @@ def getFotos():
     return jsonify(output)
 
 app.run()
-
-# @login_manager.user_loader
-# def load_user(user_id):
-#     print("load user")
-#     user = UserLogin().fromDB(user_id, db, Users)
-#     print(user)
-#     return user

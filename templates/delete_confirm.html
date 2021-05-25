@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{nickname}} - {{album_name}} - Удаление альбома 
+{% endblock title %}
+
+{% block header %}
+    {{nickname}} - {{album_name}} - Удаление альбома
+{% endblock header %}
+
+{% block body %}
+<div class='auth-form'>
+    <main class="form-signin">
+        <form action="/myalbums/{{album_id}}/delete_album" method="POST" class="form-contact">
+            <div class="form-group">
+                <label for="inputPrivacy">Я согласен на удаление альбома</label>
+                <input type="checkbox" class="form-control" name="confirmation" 
+                id="inputPrivacy">
+            </div>
+            <button type="submit" class="btn btn-primary">Подтвердить удаление</button>
+          </form>
+      </main>
+</div>
+{% endblock body %}
