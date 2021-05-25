@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{nickname}} - {{album_name}} - Добавление фото 
+{% endblock title %}
+
+{% block header %}
+    {{nickname}} - {{album_name}} - Добавление фото 
+{% endblock header %}
+
+{% block body %}
+<div class='auth-form'>
+    <main class="form-signin">
+        <form action="/myalbums/{{album_id}}/change_album_description" method="POST" class="form-contact">
+            <div class="form-group">
+                <label for="inputAlbumDesc">Описание альбома</label>
+                <textarea class="form-control" id="inputAlbumDesc" name="description" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Создать</button>
+          </form>
+      </main>
+</div>
+{% endblock body %}

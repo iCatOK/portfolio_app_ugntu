@@ -20,7 +20,11 @@
       <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto">
               {% for i in album_toolbar.keys() %}
-                  <li class="nav-item"><a class="nav-link" href="{{url_for(album_toolbar[i])}}">{{i}}</a></li>
+                  {% if 'album_id' in album_toolbar[i] %}
+                    <li class="nav-item"><a class="nav-link" href="{{url_for(album_toolbar[i]['url'], album_id=album_toolbar[i]['album_id'])}}">{{i}}</a></li>
+                  {% else %}
+                    <li class="nav-item"><a class="nav-link" href="{{url_for(album_toolbar[i])}}">{{i}}</a></li>
+                  {% endif %}
               {% endfor %}
           </ul>
       </div>

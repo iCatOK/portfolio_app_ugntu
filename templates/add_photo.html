@@ -11,20 +11,16 @@
 {% block body %}
 <div class='auth-form'>
     <main class="form-signin">
-        <form action="/add_album" method="POST" class="form-contact">
+        <form action="/myalbums/{{album_id}}/add_photo_to_album" method="POST" class="form-contact">
             <div class="form-group">
-              <label for="inputAlbumName">Название альбома</label>
-              <input type="text" class="form-control" id="inputAlbumName" name="album_name" required>
+              <label for="inputPhotoUrl">URL фото</label>
+              <input type="text" class="form-control" id="inputPhotoUrl" name="photo_url" required>
             </div>
             <div class="form-group">
-                <label for="inputAlbumDesc">Описание альбома</label>
-                <input type="text" class="form-control" name="description" id="inputAlbumDesc">
+                <label for="inputPhotoDesc">Описание фото</label>
+                <input type="text" class="form-control" name="description" id="inputPhotoDesc">
             </div>
-            <div class="form-group">
-                <label for="inputPrivacy">Приватность</label>
-                <input type="checkbox" class="form-control" name="privacy" id="inputPrivacy">
-            </div>
-            <button type="submit" class="btn btn-primary">Создать</button>
+            <button type="submit" class="btn btn-primary">Добавить</button>
           </form>
       </main>
 </div>
