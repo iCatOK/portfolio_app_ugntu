@@ -39,12 +39,17 @@ menu_out = {
     'Выйти': 'quit'
 }
 
+# менеджинг списка альбомов
+album_list_toolbar = {
+    "Добавить альбом": "index"
+}
+
 # меню авторизированного пользователя - редактирование альбома
 album_toolbar = {
-    'Добавить фото': '',
-    'Редактировать описание': '',
-    'Приватность':'',
-    'Удалить альбом': ''
+    'Добавить фото': 'index',
+    'Редактировать описание': 'index',
+    'Приватность':'index',
+    'Удалить альбом': 'index'
 }
 
 # меню авторизированного пользователя - редактирование фото
@@ -73,7 +78,9 @@ def my_albums():
     if(current_user is not None):
         print(current_user)
         albums = get_all_albums_public(db, current_user.nickname)
-        return render_template('user_albums.html',albums=albums, nickname=current_user.nickname, menu=menu)
+        return render_template(
+            'user_albums.html',albums=albums, 
+            nickname=current_user.nickname, menu=menu, album_list_toolbar = album_list_toolbar, is_not_toolbar = False)
     else:
         flash('что-то не то', 'error')
         return redirect(url_for('index'))
@@ -96,7 +103,7 @@ def authorize():
         
         flash('Неверная пара логин/пароль', 'error')
 
-    return render_template('authorization.html', menu=menu)
+    return render_template('authorization.html', menu=menu, is_not_toolbar = True)
 
 # регистрация
 @app.route('/register', methods=['GET', 'POST'])
@@ -130,7 +137,7 @@ def register():
             flash('Неправильно введены данные: username должен быть больше 4 символов, пароль должен быть больше 8 символов', 'error')
     
 
-    return render_template('register.html', menu=menu)
+    return render_template('register.html', menu=menu, is_not_toolbar = True)
 
 @app.route('/test', methods=['GET'])
 def test():
@@ -142,7 +149,7 @@ def test():
 @app.route('/')
 def index():
     allUsers = db.session.query(Users).all()
-    return render_template('index.html', users=allUsers, menu=menu)
+    return render_template('index.html', users=allUsers, menu=menu, is_not_toolbar = True)
 
 # пользовательские альбомы - добавить редирект при совпадении ников (nickname==currentNick => redirect)
 @app.route('/<string:nickname>/albums', methods=['GET'])
@@ -152,14 +159,14 @@ def get_user_albums(nickname):
         return redirect(url_for('my_albums'))
     else:
         albums = get_all_albums_public(db, nickname)
-        return render_template('user_albums.html',albums=albums, nickname=nickname, menu=menu)
+        return render_template('user_albums.html',albums=albums, nickname=nickname, menu=menu, is_not_toolbar = True)
 
 # пользовательские фото - аналогично при совпадении текущего никнейма
 @app.route('/<string:nickname>/albums/<int:album_id>', methods=['GET'])
 def get_album_photos(nickname, album_id):
     photos = db.session.query(Photos).filter_by(album_id=album_id)
     album_name = db.session.query(Albums).filter_by(album_id=album_id, privacy=False).first().album_name
-    return render_template('photos_in_album.html', album_id=album_id, nickname=nickname, photos=photos, menu=menu, album_name=album_name, toolbar=1)
+    return render_template('photos_in_album.html', album_id=album_id, nickname=nickname, photos=photos, menu=menu, album_name=album_name, toolbar=1, is_not_toolbar = True)
 
 # 
 @app.route('/get_photos', methods=['GET'])

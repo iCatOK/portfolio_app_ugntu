@@ -37,8 +37,10 @@
         </div>
     {% endfor %}
 
+    
+
     <!-- Header -->
-    <header class="bg-primary text-center py-5 mb-4">
+    <header class="bg-primary text-center py-5 {% if is_not_toolbar %} mb-4 {% endif %}">
         <div class="container">
           <h1 class="font-weight-light text-white">{% block header %}{% endblock header %}</b></h1>
         </div>
