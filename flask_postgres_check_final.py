@@ -72,7 +72,8 @@ def quit():
 def my_albums():
     if(current_user is not None):
         print(current_user)
-        return redirect(url_for('get_user_albums', nickname=current_user.nickname))
+        albums = get_all_albums_public(db, current_user.nickname)
+        return render_template('user_albums.html',albums=albums, nickname=current_user.nickname, menu=menu)
     else:
         flash('что-то не то', 'error')
         return redirect(url_for('index'))
@@ -116,8 +117,6 @@ def register():
             user = Users(**user_args)
             print(user.full_name)
 
-            
-
             try:
                 db.session.add(user)
                 print('добавил')
@@ -148,8 +147,12 @@ def index():
 # пользовательские альбомы - добавить редирект при совпадении ников (nickname==currentNick => redirect)
 @app.route('/<string:nickname>/albums', methods=['GET'])
 def get_user_albums(nickname):
-    albums = get_all_albums_public(db, nickname)
-    return render_template('user_albums.html',albums=albums, nickname=nickname, menu=menu)
+    global current_user
+    if current_user is not None and nickname == current_user.nickname:
+        return redirect(url_for('my_albums'))
+    else:
+        albums = get_all_albums_public(db, nickname)
+        return render_template('user_albums.html',albums=albums, nickname=nickname, menu=menu)
 
 # пользовательские фото - аналогично при совпадении текущего никнейма
 @app.route('/<string:nickname>/albums/<int:album_id>', methods=['GET'])
