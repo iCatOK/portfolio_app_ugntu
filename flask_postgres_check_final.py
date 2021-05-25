@@ -51,7 +51,7 @@ album_toolbar = {
         'album_id': 1,
     },
     'Редактировать описание': {
-        'url': '',
+        'url': 'change_album_description',
         'album_id': 1
     },
     'Приватность':'index',
@@ -78,7 +78,27 @@ def quit():
     flash('Выход совершен')
     return redirect(url_for('index'))
 
-# редактирование описания
+# редактирование описания альбома
+@app.route('/myalbums/<int:album_id>/change_album_description', methods=['GET', 'POST'])
+def change_album_description(album_id):
+    album = db.session.query(Albums).filter_by(album_id=album_id).first()
+    if request.method == 'POST':
+        if len(request.form['description']) > 0:
+            album.description = request.form['description']
+        else:
+            album.description = None
+        db.session.commit()
+        return redirect(url_for('photos_of_current_user_album', album_id=album_id))
+    else:
+        if(current_user is not None):
+            print(current_user)
+            return render_template('change_description.html', nickname=current_user.nickname,
+                menu=menu, album_id = album_id, album_description=album.description,
+                album_name = album_toolbar['Добавить фото']['album_name'], 
+                is_not_toolbar = True)
+        else:
+            flash('Анонимный пользователь', 'error')
+            return redirect(url_for('index'))
 
 # добавление фото в альбом пользователя
 @app.route('/myalbums/<int:album_id>/add_photo_to_album', methods=['GET', 'POST'])
@@ -249,6 +269,7 @@ def get_album_photos(nickname, album_id):
 def photos_of_current_user_album(album_id):
     if current_user is not None:
         album_toolbar['Добавить фото']['album_id'] = album_id
+        album_toolbar['Редактировать описание']['album_id'] = album_id
         photos = db.session.query(Photos).filter_by(album_id=album_id)
         album_name = db.session.query(Albums).filter_by(album_id=album_id).first().album_name
         album_toolbar['Добавить фото']['album_name'] = album_name

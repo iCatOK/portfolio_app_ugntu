@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
 {% block title %}
-    {{nickname}} - {{album_name}} - Добавление фото 
+    {{nickname}} - {{album_name}} - Изменение описания альбома 
 {% endblock title %}
 
 {% block header %}
-    {{nickname}} - {{album_name}} - Добавление фото 
+    {{nickname}} - {{album_name}} - Изменение описания альбома
 {% endblock header %}
 
 {% block body %}
@@ -14,9 +14,9 @@
         <form action="/myalbums/{{album_id}}/change_album_description" method="POST" class="form-contact">
             <div class="form-group">
                 <label for="inputAlbumDesc">Описание альбома</label>
-                <textarea class="form-control" id="inputAlbumDesc" name="description" rows="3"></textarea>
+                <textarea class="form-control" id="inputAlbumDesc" name="description" rows="3">{{album_description}}</textarea>
             </div>
-            <button type="submit" class="btn btn-primary">Создать</button>
+            <button type="submit" class="btn btn-primary">Изменить</button>
           </form>
       </main>
 </div>
