@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Вход
+{% endblock title %}
+
+{% block header %}
+    Вход на платформу
+{% endblock header %}
+
+{% block body %}
+<div class='auth-form'>
+    <main class="form-signin">
+        <form action="/authorize" method="POST" class="form-contact">
+            <div class="form-group">
+              <label for="exampleInputEmail1">Никнейм</label>
+              <input type="text" name="nick" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" required>
+            </div>
+            <div class="form-group">
+              <label for="exampleInputPassword1">Пароль</label>
+              <input type="password" name="pass" class="form-control" id="exampleInputPassword1" required>
+            </div>
+            <div class="form-group form-check">
+              <input type="checkbox" class="form-check-input" id="exampleCheck1">
+              <label class="form-check-label" for="exampleCheck1">Запомнить меня</label>
+            </div>
+            <div class="button-group">
+                <button type="submit" class="btn btn-primary">Войти</button>
+                <button type="submit" class="btn btn-primary"><a href="{{url_for('register')}}">Регистрация</a></button>         
+            </div>
+          </form>
+      </main>
+</div>
+
+
+  
+{% endblock body %}

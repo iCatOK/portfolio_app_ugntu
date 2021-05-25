@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{nickname}} - Альбомы - {{album_name}}
+{% endblock title %}
+
+{% block header %}
+  {{nickname}} - {{album_name}}
+{% endblock header %}
+
+{% block body %}
+
+<div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
+  
+  {% if  photos.count() > 0 %}
+    <div class="carousel-inner">
+    {% for photo in photos %}
+      <div class="carousel-item active">
+        <img src="{{ photo.photo_url }}" class="d-block w-100" alt="...">
+        {% if photo.description != None %}
+          <div class="carousel-caption d-none d-md-block">
+            <p>{{ photo.description }}</p>
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+    </div>
+  {% else %}
+    <div class='empty-photos'>
+      <h3>У пользователя еще нет фоток :с</h2>
+    </div>
+  {% endif %}
+
+  <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Previous</span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Next</span>
+  </button>
+</div>
+
+{% endblock body %}

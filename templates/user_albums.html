@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{nickname}} - Альбомы 
+{% endblock title %}
+
+{% block header %}
+  Альбомы от <b>{{nickname}}
+{% endblock header %}
+
+{% block body %}
+
+<div class="container">
+    <div class="row" >
+      <!-- Team Member 1 -->
+      {% if  albums|length > 0 %}
+        {% for album in albums %}
+          <div class="col-xl-3 col-md-6 mb-4">
+            <a href="{{ url_for('get_album_photos', nickname=nickname, album_id=album.album_id) }}" class="card border-0 shadow">
+              <img src="{{ album.photo_cover_url }}" class="card-img-top" alt="...">
+              <div class="card-body text-center">
+                <h5 class="card-title mb-0">{{album.album_name}}</h5>
+                {% if album.description != None %}
+                    <div class="card-text text-black-50">{{ album.description }}</div>
+                {% endif %}
+              </div>
+            </a>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class='empty-photos'>
+          <h3>У пользователя еще нет альбомов :с</h2>
+        </div>
+      {% endif %}
+  </div>
+</div>
+
+{% endblock body %}

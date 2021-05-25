@@ -1,0 +1,76 @@
+html,
+body {
+  height: 100%;
+}
+
+.auth-form {
+  display: flex;
+  align-items: center;
+  padding-top: 40px;
+  padding-bottom: 40px;
+}
+
+.auth-form .button-group{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.auth-form .button-group button a{
+  text-decoration: none;
+  color: white;
+}
+
+.auth-form .form-signin {
+  width: 100%;
+  max-width: 330px;
+  padding: 15px;
+  margin: auto;
+}
+
+.auth-form .form-signin .checkbox {
+  font-weight: 400;
+}
+
+.auth-form .form-signin .form-floating:focus-within {
+  z-index: 2;
+}
+
+.auth-form .form-signin input[type="email"] {
+  margin-bottom: -1px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.auth-form .form-signin input[type="password"] {
+  margin-bottom: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+
+.card{
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.card-title{
+    color: black;
+}
+.empty-photos{
+  text-align: center;
+}
+
+.row > * {
+  border-bottom: 20px solid #ffffff;
+}
+
+@media (min-width: 992px) {
+    .card:hover {
+      margin-top: -.25rem;
+      margin-bottom: .25rem;
+      box-shadow: 0 0.5rem 1rem 0 rgba(0, 0, 0, 0.3);
+      text-decoration: none;
+      
+    }
+  }

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Регистрация
+{% endblock title %}
+
+{% block header %}
+    Регистрация
+{% endblock header %}
+
+{% block body %}
+<div class='auth-form'>
+    <main class="form-signin">
+        <form action="/register" method="POST" class="form-contact">
+            <div class="form-group">
+              <label for="inputNick">Никнейм</label>
+              <input type="text" class="form-control" id="inputNick" name="nick" required>
+            </div>
+            <div class="form-group">
+                <label for="inputName">Полное имя</label>
+                <input type="text" class="form-control" name="name" id="inputName">
+            </div>
+            <div class="form-group">
+                <label for="inputPhone">Телефон</label>
+                <input type="tel" class="form-control" name="phone" id="inputPhone">
+            </div>
+            <div class="form-group">
+                <label for="inputDescription">Немного о себе</label>
+                <textarea class="form-control" id="inputDescription" name="descr" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="inputPassword">Пароль</label>
+              <input type="password" class="form-control" name="password" id="inputPassword" required>
+            </div>
+            <div class="form-group">
+                <label for="inputPhoto">Url photo профиля</label>
+                <input type="url" name="photo" class="form-control" id="inputPhoto">
+            </div>
+            <button type="submit" class="btn btn-primary">Регистрация</button>
+          </form>
+      </main>
+</div>
+{% endblock body %}
