@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{nickname}} - {{album_name}} - Настройка приватности 
+{% endblock title %}
+
+{% block header %}
+    {{nickname}} - {{album_name}} - Настройка приватности
+{% endblock header %}
+
+{% block body %}
+<div class='auth-form'>
+    <main class="form-signin">
+        <form action="/myalbums/{{album_id}}/change_privacy" method="POST" class="form-contact">
+            <div class="form-group">
+                <label for="inputPrivacy">Приватность</label>
+                <input type="checkbox" class="form-control" name="privacy" 
+                id="inputPrivacy" {% if album_privacy%}checked{% endif %}>
+            </div>
+            <button type="submit" class="btn btn-primary">Изменить</button>
+          </form>
+      </main>
+</div>
+{% endblock body %}

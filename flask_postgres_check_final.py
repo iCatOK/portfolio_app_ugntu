@@ -54,7 +54,10 @@ album_toolbar = {
         'url': 'change_album_description',
         'album_id': 1
     },
-    'Приватность':'index',
+    'Приватность':{
+        'url': 'change_privacy',
+        'album_id': 1
+    },
     'Удалить альбом': 'index',
 }
 
@@ -77,6 +80,26 @@ def quit():
     menu = menu_in
     flash('Выход совершен')
     return redirect(url_for('index'))
+
+# редактирование приватности альбома
+@app.route('/myalbums/<int:album_id>/change_privacy', methods=['GET', 'POST'])
+def change_privacy(album_id):
+    album = db.session.query(Albums).filter_by(album_id=album_id).first()
+    if request.method == 'POST':
+        is_private = True if request.form.get('privacy') == 'on' else False
+        album.privacy = is_private
+        db.session.commit()
+        return redirect(url_for('photos_of_current_user_album', album_id=album_id))
+    else:
+        if(current_user is not None):
+            return render_template('change_privacy.html', nickname=current_user.nickname,
+                menu=menu, album_id = album_id, album_privacy=album.privacy,
+                album_name = album_toolbar['Добавить фото']['album_name'], 
+                is_not_toolbar = True)
+        else:
+            flash('Анонимный пользователь', 'error')
+            return redirect(url_for('index'))
+
 
 # редактирование описания альбома
 @app.route('/myalbums/<int:album_id>/change_album_description', methods=['GET', 'POST'])
@@ -268,8 +291,9 @@ def get_album_photos(nickname, album_id):
 @app.route('/myalbums/<int:album_id>', methods=['GET'])
 def photos_of_current_user_album(album_id):
     if current_user is not None:
-        album_toolbar['Добавить фото']['album_id'] = album_id
-        album_toolbar['Редактировать описание']['album_id'] = album_id
+        for key in album_toolbar.keys():
+            if 'album_id' in album_toolbar[key]:
+                album_toolbar[key]['album_id'] = album_id
         photos = db.session.query(Photos).filter_by(album_id=album_id)
         album_name = db.session.query(Albums).filter_by(album_id=album_id).first().album_name
         album_toolbar['Добавить фото']['album_name'] = album_name
