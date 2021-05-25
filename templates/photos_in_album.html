@@ -12,6 +12,22 @@
 
 {% block body %}
 
+{% if album_toolbar %}
+  <!--Album toolbar-->
+<nav class="album_toolbar navbar navbar-expand-lg navbar-light bg-light mb-4">
+  <div class="container">
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+      <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+              {% for i in album_toolbar.keys() %}
+                  <li class="nav-item"><a class="nav-link" href="{{url_for(album_toolbar[i])}}">{{i}}</a></li>
+              {% endfor %}
+          </ul>
+      </div>
+  </div>
+</nav>
+{% endif %}
+
 <div class="container justify-content-center align-items-center">
     <div class="row row-grid h-100 justify-content-center align-items-center">
       <!-- Team Member 1 -->

@@ -41,7 +41,7 @@ menu_out = {
 
 # менеджинг списка альбомов
 album_list_toolbar = {
-    "Добавить альбом": "index"
+    "Добавить альбом": "add_album"
 }
 
 # меню авторизированного пользователя - редактирование альбома
@@ -49,7 +49,8 @@ album_toolbar = {
     'Добавить фото': 'index',
     'Редактировать описание': 'index',
     'Приватность':'index',
-    'Удалить альбом': 'index'
+    'Удалить альбом': 'index',
+    'Сменить обложку альбома': 'index'
 }
 
 # меню авторизированного пользователя - редактирование фото
@@ -77,13 +78,57 @@ def quit():
 def my_albums():
     if(current_user is not None):
         print(current_user)
-        albums = get_all_albums_public(db, current_user.nickname)
+        albums = db.session.query(Albums).filter_by(user_id=current_user.user_id)
         return render_template(
             'user_albums.html',albums=albums, 
-            nickname=current_user.nickname, menu=menu, album_list_toolbar = album_list_toolbar, is_not_toolbar = False)
+            nickname=current_user.nickname, menu=menu, 
+            album_list_toolbar = album_list_toolbar, is_not_toolbar = False, 
+            albums_length = albums.count())
     else:
         flash('что-то не то', 'error')
         return redirect(url_for('index'))
+
+# альбомы пользователя
+@app.route('/add_album', methods=['GET', 'POST'])
+def add_album():
+    if request.method == 'POST':
+        if len(request.form['album_name']) > 5:
+            album_args = {
+                'album_name': request.form['album_name'],
+                'description':request.form['description'],
+                'user_id': current_user.user_id,
+                'privacy': True if request.form.get('privacy') == 'on' else False,
+            }
+
+            album = Albums(**album_args)
+            print(album.album_name)
+
+            db.session.add(album)
+            print('добавил')
+            db.session.commit()
+            print('закомитил')
+            flash(f'Поздравляем, альбом "{album.album_name}" создан!', 'success')
+            return redirect(url_for('my_albums'))
+
+            # try:
+            #     db.session.add(album)
+            #     print('добавил')
+            #     db.session.commit()
+            #     print('закомитил')
+            #     flash(f'Поздравляем, альбом "{album.album_name}" создан!', 'success')
+            #     return redirect(url_for('my_albums'))
+            # except:
+            #     flash('Не удалось создать альбом', 'error')
+            #     return redirect(url_for('index'))
+        else:
+            flash('Неправильно введены данные: название альбома должно содержать не менее 6 символов', 'error')
+    else:
+        if(current_user is not None):
+            print(current_user)
+            return render_template('add_album.html', nickname=current_user.nickname, menu=menu, is_not_toolbar = True)
+        else:
+            flash('Анонимный пользователь', 'error')
+            return redirect(url_for('index'))
 
 # авторизация
 @app.route('/authorize', methods=['GET', 'POST'])
@@ -159,14 +204,16 @@ def get_user_albums(nickname):
         return redirect(url_for('my_albums'))
     else:
         albums = get_all_albums_public(db, nickname)
-        return render_template('user_albums.html',albums=albums, nickname=nickname, menu=menu, is_not_toolbar = True)
+        return render_template('user_albums.html',albums=albums, nickname=nickname,
+         menu=menu, is_not_toolbar = True, albums_length = len(albums))
 
 # пользовательские фото - аналогично при совпадении текущего никнейма
 @app.route('/<string:nickname>/albums/<int:album_id>', methods=['GET'])
 def get_album_photos(nickname, album_id):
     photos = db.session.query(Photos).filter_by(album_id=album_id)
-    album_name = db.session.query(Albums).filter_by(album_id=album_id, privacy=False).first().album_name
-    return render_template('photos_in_album.html', album_id=album_id, nickname=nickname, photos=photos, menu=menu, album_name=album_name, toolbar=1, is_not_toolbar = True)
+    album_name = db.session.query(Albums).filter_by(album_id=album_id).first().album_name
+    return render_template('photos_in_album.html', album_id=album_id, nickname=nickname, photos=photos,
+    menu=menu, album_name=album_name, album_toolbar=album_toolbar, is_not_toolbar = False)
 
 # 
 @app.route('/get_photos', methods=['GET'])
