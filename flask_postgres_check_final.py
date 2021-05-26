@@ -72,6 +72,12 @@ photo_toolbar = {
 current_user = None
 is_authorized = False
 
+def get_auth_user_like(photo_id):
+    if current_user is None:
+        return True
+    like = db.session.query(Likes).filter_by(photo_id=photo_id, user_id = current_user.user_id).first()
+    return like is not None
+
 # выход из аккаунта
 @app.route('/quit', methods=['GET'])
 def quit():
@@ -84,28 +90,65 @@ def quit():
     flash('Выход совершен')
     return redirect(url_for('index'))
 
+def set_photo_action_menu(photo_id):
+    photo = db.session.query(Photos).filter_by(photo_id=photo_id).first()
+    if request.form['btn'] == 'like_a_photo':
+        if(get_auth_user_like(photo_id)):
+            like = db.session.query(Likes).filter_by(photo_id=photo_id, user_id = current_user.user_id).first()
+            db.session.delete(like)
+            db.session.commit()
+        else:
+            like = Likes(user_id=current_user.user_id, photo_id=photo_id)
+            db.session.add(like)
+            db.session.commit()
+    elif request.form['btn'] == 'change_description':
+        description = request.form['description']
+        if len(description) > 0:
+            photo.description = description
+            db.session.commit()
+        else:
+            flash('Неправильно введены данные: введите ссылку на фото', 'error')
+    elif request.form['btn'] == 'delete_photo':
+        db.session.delete(photo)
+        db.session.commit()
+
 # фото - редирект при совпадении текущего никнейма
-@app.route('/<string:nickname>/albums/<int:album_id>/<int:photo_id>', methods=['GET'])
+@app.route('/<string:nickname>/albums/<int:album_id>/<int:photo_id>', methods=['GET', 'POST'])
 def get_photo(nickname, album_id, photo_id):
     if current_user is not None and nickname == current_user.nickname:
-        return redirect(url_for('get_photo_current_user', album_id=album_id, photo_id=photo_id))
+        return redirect(
+            url_for(
+                'get_photo_current_user', album_id=album_id, photo_id=photo_id),
+                code=307 if request.method == 'POST' else 302
+            )
+    if request.method == 'POST':
+        if request.form['btn'] == 'back':
+            return redirect(url_for('photos_of_current_user_album', album_id=album_id))
+        if nickname != current_user.nickname:
+            set_photo_action_menu(photo_id)
+            return redirect(url_for('get_photo', album_id=album_id, photo_id=photo_id, nickname = nickname))
+    is_auth = current_user is not None
     photo = db.session.query(Photos).filter_by(photo_id=photo_id).first()
     album_name = db.session.query(Albums).filter_by(album_id=album_id).first().album_name
     return render_template('photo.html', album_id=album_id, nickname=nickname, photo=photo,
-    menu=menu, album_name=album_name, is_not_toolbar = True)
+    menu=menu, album_name=album_name, is_auth=is_auth, is_not_toolbar = True, get_auth_user_like=get_auth_user_like)
 
-@app.route('/myalbums/albums/<int:album_id>/<int:photo_id>', methods=['GET', 'POST'])
+@app.route('/myalbums/<int:album_id>/<int:photo_id>', methods=['GET', 'POST'])
 def get_photo_current_user(album_id, photo_id):
     if current_user is None:
         flash('Анонимный пользователь', 'error')
         return redirect(url_for('index'))
     if request.method == 'POST':
-        pass
+        set_photo_action_menu(photo_id)
+        if request.form['btn'] == 'delete_photo' or request.form['btn'] == 'back':
+            return redirect(url_for('photos_of_current_user_album', album_id=album_id))
+        return redirect(url_for('get_photo_current_user', album_id=album_id, photo_id=photo_id))
     else:
+        print('ну и где, а это гет')
         photo = db.session.query(Photos).filter_by(photo_id=photo_id).first()
         album_name = db.session.query(Albums).filter_by(album_id=album_id).first().album_name
         return render_template('photo.html', album_id=album_id, nickname=current_user.nickname, photo=photo,
-        menu=menu, album_name=album_name, is_not_toolbar = True)
+        menu=menu, album_name=album_name, is_auth = True, is_not_toolbar = True, photo_menu = True, get_auth_user_like=get_auth_user_like)
 
 # удаление альбома
 @app.route('/myalbums/<int:album_id>/delete_album', methods=['GET', 'POST'])

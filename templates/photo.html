@@ -13,7 +13,7 @@
 {% block body %}
 
 
-<div class="col-xl-8 col-md-8 mb-8">
+<div class="col-xl-8 col-md-8 mb-8 mb-4">
     <a href="{{photo.photo_url}}" class="card border-0 shadow justify-content-center">
       <img src="{{ photo.photo_url }}" class="card-img-top justify-content-center" alt="...">
       <div class="card-body text-center mx-auto">
@@ -24,18 +24,22 @@
     </a>
   </div>
 
-{% if photo_menu %}
+
   <!--Photo menu-->
-  <form action="/myalbums/{{album_id}}/{{photo.photo_id}}" method="POST" class="form-contact">
-    <div class="form-group">
-        <label for="inputDescription">Описание фото</label>
-        <textarea class="form-control" id="inputDescription" name="description" rows="3"></textarea>
-    </div>
-    <button type="submit" class="btn btn-primary" value="cover_change">Сделать обложкой альбома</button>
-    <button type="submit" value="like_a_photo" class="btn {{btn-primary if get_auth_user_like(photo.photo_id) else btn-secondary}}">{{photo.like_counter}} Мне нравится</button>
-    <button type="submit" class="btn btn-primary" value="delete_photo">Удалить фото</button>
-    <button type="submit" class="btn btn-primary" value="change_description">Изменить описание</button>
-  </form>
-{% endif %}
+<div class="col mb-4">
+    <form action="/{{nickname}}/albums/{{album_id}}/{{photo.photo_id}}" method="POST" class="form-contact">
+        <button {% if not is_auth %} disabled {% endif %}  type="submit" name="btn" value="like_a_photo" class="btn {{'btn-primary' if get_auth_user_like(photo.photo_id) else 'btn-secondary'}}">{{photo.like_counter}} Мне нравится</button>
+        <button type="submit" name="btn" class="btn btn-primary" value="back">Назад</button>
+        {% if photo_menu %}
+            <div class="form-group">
+                <label for="inputDescription">Описание фото</label>
+                <textarea class="form-control" id="inputDescription" name="description" rows="3">{{photo.description}}</textarea>
+            </div>
+            <button type="submit" name="btn" class="btn btn-primary" value="delete_photo">Удалить фото</button>
+            <button type="submit" name="btn" class="btn btn-primary" value="change_description">Изменить описание</button>
+        {% endif%}
+      </form>
+</div>
 
 {% endblock body %}
+
