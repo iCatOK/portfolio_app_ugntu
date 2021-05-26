@@ -25,7 +25,7 @@ Likes = Base.classes.likes
 # главное меню при анонимном входе
 menu = {
     'Главная': 'index',
-    'Ввести код': 'index',
+    'Ввести код': 'enter_album_code',
     'Вход': 'authorize' 
 }
 
@@ -34,7 +34,7 @@ menu_in = menu
 # главное меню после входа
 menu_out = {
     'Главная': 'index',
-    'Ввести код': 'index',
+    'Ввести код': 'enter_album_code',
     'Альбомы': 'my_albums',
     'Выйти': 'quit'
 }
@@ -70,6 +70,7 @@ photo_toolbar = {
 }
 
 current_user = None
+secret_album = None
 is_authorized = False
 
 def get_auth_user_like(photo_id):
@@ -112,6 +113,34 @@ def set_photo_action_menu(photo_id):
         db.session.delete(photo)
         db.session.commit()
 
+# получение альбома по коду
+@app.route('/album_from_code', methods=['GET', 'POST'])
+def album_from_code():
+    if secret_album is None:
+        return redirect(url_for('index'))
+    if request.method == 'POST':
+        pass
+    else:
+        user = db.session.query(Users).filter_by(user_id=secret_album.user_id).first()
+        photos = db.session.query(Photos).filter_by(album_id=secret_album.album_id)
+        return render_template('photos_in_album.html', album_id=secret_album.album_id, 
+        nickname=user.nickname, photos=photos, is_album_from_code = True,
+        menu=menu, album_name=secret_album.album_name, is_not_toolbar = True)
+    
+
+# ввод кода
+@app.route('/album_code', methods=['GET', 'POST'])
+def enter_album_code():
+    global secret_album
+    if request.method == 'POST':
+        album = db.session.query(Albums).filter_by(album_code=request.form['code']).first()
+        if album is not None:
+            secret_album = album
+            return redirect(url_for('album_from_code'))
+        flash('Неверный код альбома', 'error')
+
+    return render_template('album_code.html', menu=menu, is_not_toolbar = True)
+
 # фото - редирект при совпадении текущего никнейма
 @app.route('/<string:nickname>/albums/<int:album_id>/<int:photo_id>', methods=['GET', 'POST'])
 def get_photo(nickname, album_id, photo_id):
@@ -123,6 +152,9 @@ def get_photo(nickname, album_id, photo_id):
             )
     if request.method == 'POST':
         if request.form['btn'] == 'back':
+            if album_id == secret_album.album_id and \
+                (current_user == None or secret_album.user_id != current_user.user_id):
+                    return redirect(url_for('album_from_code'))
             return redirect(url_for('photos_of_current_user_album', album_id=album_id))
         if nickname != current_user.nickname:
             set_photo_action_menu(photo_id)
@@ -386,10 +418,10 @@ def photos_of_current_user_album(album_id):
             if 'album_id' in album_toolbar[key]:
                 album_toolbar[key]['album_id'] = album_id
         photos = db.session.query(Photos).filter_by(album_id=album_id)
-        album_name = db.session.query(Albums).filter_by(album_id=album_id).first().album_name
-        album_toolbar['Добавить фото']['album_name'] = album_name
+        album = db.session.query(Albums).filter_by(album_id=album_id).first()
+        album_toolbar['Добавить фото']['album_name'] = album.album_name
         return render_template('photos_in_album.html', album_id=album_id, nickname=current_user.nickname, photos=photos,
-        menu=menu, album_name=album_name, album_toolbar=album_toolbar, is_not_toolbar = False)
+        menu=menu, album_code=f'(код: {album.album_code})', album_name=album.album_name, album_toolbar=album_toolbar, is_not_toolbar = False)
     else:
         flash('Анонимный пользователь', 'error')
         return redirect(url_for('index'))
