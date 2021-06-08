@@ -8,7 +8,10 @@
   {{nickname}} - {{album_name}} {{album_code}}
 {% endblock header %}
 
+
+
 {% block body %}
+
 {% if album_toolbar %}
   <!--Album toolbar-->
 <nav class="album_toolbar navbar navbar-expand-lg navbar-light bg-light mb-4">
@@ -49,10 +52,11 @@
 </div>
 {% endif %}
 
+
 <div class="container justify-content-center align-items-center">
     <div class="row row-grid h-100 justify-content-center align-items-center">
       <!-- Team Member 1 -->
-      {% if  photos.count() > 0 %}
+      {% if  photos | length > 0 %}
         {% for photo in photos %}
           <div class="col-xl-6 col-md-6 mb-6">
             <a href="{{ url_for('get_photo', nickname=nickname, album_id=photo.album_id, photo_id=photo.photo_id) }}" class="card border-0 shadow">

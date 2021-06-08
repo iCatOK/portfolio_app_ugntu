@@ -28,30 +28,24 @@
     </div>
 </nav>
 
-    {% for msg in get_flashed_messages() %}
-        <div class='alert alert-primary alert-dismissible fade show'>
-            {{msg}}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    {% endfor %}
-
-    
+{% for msg in get_flashed_messages() %}
+    <div class='alert alert-primary alert-dismissible fade show'>
+        {{msg}}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+{% endfor %}
 
     <!-- Header -->
-    <header class="bg-primary text-center py-5 {% if is_not_toolbar %} mb-4 {% endif %}">
+    <header class="bg-primary text-center py-5 {% if is_not_toolbar or is_album_from_code %} mb-4 {% endif %}">
         <div class="container">
           <h1 class="font-weight-light text-white">{% block header %}{% endblock header %}</b></h1>
         </div>
     </header>
 
-    
-
    {% block body %}
 
-   
-       
    {% endblock %}
 </body>
 </html>

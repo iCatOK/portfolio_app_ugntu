@@ -8,13 +8,10 @@
   Альбомы от <b>{{nickname}}
 {% endblock header %}
 
-
-
 {% block body %}
-
 {% if album_list_toolbar %}
   <!--Album list toolbar-->
-<nav class="album_toolbar navbar navbar-expand-lg navbar-light bg-light mb-4">
+<nav class="album_toolbar navbar navbar-expand-lg navbar-light bg-light">
   <div class="container">
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
       <div class="collapse navbar-collapse" id="navbarResponsive">
@@ -28,17 +25,20 @@
 </nav>
 {% endif %}
 
+<nav class="navbar navbar-light bg-light mb-4">
+  <a class="btn btn-outline-primary" href="{{url_for('all_user_photos', nickname=nickname)}}" role="button">Посмотреть все фото пользователя</a>
+</nav>
+
 <div class="container">
     <div class="row" >
       <!-- Team Member 1 -->
-      {% set default_album_cover = 'https://images.unsplash.com/source-404?fit=crop&fm=jpg&h=800&q=60&w=1200'%}
       {% if  albums_length > 0 %}
         {% for album in albums %}
           <div class="col-xl-3 col-md-6 mb-4">
             <a href="{{ url_for('get_album_photos', nickname=nickname, album_id=album.album_id) }}" class="card border-0 shadow">
-              <img src="{{ album.photo_cover_url if album.photo_cover_url else default_album_cover }}" class="card-img-top" alt="...">
+              <img src="{{ album.photo_cover_url}}" class="card-img-top" alt="...">
               <div class="card-body text-center">
-                <h5 class="card-title mb-0">{{album.album_name}}</h5>
+                <h5 class="card-title mb-0">{{album.album_name}} ({{album.photo_count}})</h5>
                 {% if album.description != None %}
                     <div class="card-text text-black-50">{{ album.description }}</div>
                 {% endif %}
@@ -53,5 +53,4 @@
       {% endif %}
   </div>
 </div>
-
 {% endblock body %}

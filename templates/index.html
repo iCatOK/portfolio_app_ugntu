@@ -22,16 +22,11 @@
             {% if user.description != None %}
                 <div class="card-text text-black-50">{{ user.description }}</div>
             {% endif %}
+            <div class="card-text text-black-100">Рейтинг: {{ user.rating }}</div>
           </div>
         </a>
       </div>
       {% endfor %}
-
-
-
-     
-  
   </div>
 </div>
-  <!-- /.container -->
  {% endblock body %}

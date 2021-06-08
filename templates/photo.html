@@ -8,12 +8,8 @@
   {{nickname}} - {{album_name}}
 {% endblock header %}
 
-
-
 {% block body %}
-
-
-<div class="col-xl-8 col-md-8 mb-8 mb-4">
+<div class="col-xl-4 col-md-4 mb-4 mb-4">
     <a href="{{photo.photo_url}}" class="card border-0 shadow justify-content-center">
       <img src="{{ photo.photo_url }}" class="card-img-top justify-content-center" alt="...">
       <div class="card-body text-center mx-auto">
@@ -40,6 +36,5 @@
         {% endif%}
       </form>
 </div>
-
 {% endblock body %}
 

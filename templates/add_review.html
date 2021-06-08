@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Оставить отзыв
+{% endblock title %}
+
+{% block header %}
+    Оставить отзыв
+{% endblock header %}
+
+{% block body %}
+<div class='auth-form'>
+    <main class="form-signin">
+        <form action="/review" method="POST" class="form-contact">
+            <div class="form-group">
+              <label for="reviewFullName">ФИО</label>
+              <input type="text" name="full_name" class="form-control" id="reviewFullName" aria-describedby="emailHelp" required>
+            </div>
+            <div class="form-group">
+                <label for="inputReview">Напишите о работе с фотографом</label>
+                <textarea class="form-control" id="inputReview" name="review_text" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="reviewRating">Оценка (от 1 до 5)</label>
+                <input type="text" name="rating" class="form-control" id="reviewRating" aria-describedby="emailHelp" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Оставить отзыв</button>
+          </form>
+      </main>
+</div>
+{% endblock body %}

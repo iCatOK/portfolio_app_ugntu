@@ -1,13 +1,17 @@
-from flask import Flask, jsonify, render_template, url_for, request, flash, redirect, get_flashed_messages
+from flask import Flask, jsonify, render_template, \
+url_for, request, flash, redirect, get_flashed_messages
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.automap import automap_base
-from utils.custom_orm import get_all_albums_public
+from utils.custom_orm import get_all_albums_public, \
+get_all_photos_of_user, get_all_albums
 from werkzeug.security import generate_password_hash, check_password_hash
 from UserLogin import UserLogin
+import re
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:koij890hgf@localhost:5433/postgres"
+app.config['SQLALCHEMY_DATABASE_URI'] \
+= "postgresql://postgres:koij890hgf@localhost:5433/postgres"
 app.config['JSON_AS_ASCII'] = False
 app.config['SECRET_KEY'] = 'kfksofkokfosalfsjk234fdksfl'
 app.debug = True
@@ -76,7 +80,9 @@ is_authorized = False
 def get_auth_user_like(photo_id):
     if current_user is None:
         return True
-    like = db.session.query(Likes).filter_by(photo_id=photo_id, user_id = current_user.user_id).first()
+    like = db.session.query(Likes)\
+        .filter_by(photo_id=photo_id, user_id = current_user.user_id)\
+        .first()
     return like is not None
 
 # выход из аккаунта
@@ -94,14 +100,8 @@ def quit():
 def set_photo_action_menu(photo_id):
     photo = db.session.query(Photos).filter_by(photo_id=photo_id).first()
     if request.form['btn'] == 'like_a_photo':
-        if(get_auth_user_like(photo_id)):
-            like = db.session.query(Likes).filter_by(photo_id=photo_id, user_id = current_user.user_id).first()
-            db.session.delete(like)
-            db.session.commit()
-        else:
-            like = Likes(user_id=current_user.user_id, photo_id=photo_id)
-            db.session.add(like)
-            db.session.commit()
+        db.session.execute(f"call toggle_like({current_user.user_id}, {photo_id});")
+        db.session.commit()
     elif request.form['btn'] == 'change_description':
         description = request.form['description']
         if len(description) > 0:
@@ -113,19 +113,72 @@ def set_photo_action_menu(photo_id):
         db.session.delete(photo)
         db.session.commit()
 
+@app.route('/review', methods=['GET', 'POST'])
+def add_review():
+    if request.method == 'POST':
+        if len(request.form['full_name']) < 10:
+            flash('ФИО должно составлять больше 10 символов')
+            return render_template('add_review.html', menu=menu, is_not_toolbar = True)
+        if len(request.form['review_text']) < 1:
+            flash('[Текст отзыва] Напишите хотя бы один символ')
+            return render_template('add_review.html', menu=menu, is_not_toolbar = True)
+        if re.match(r'[^1-5]', request.form['rating']):
+            flash('[Оценка] Введите правильно оценку (от 1 до 5)')
+            return render_template('add_review.html', menu=menu, is_not_toolbar = True)
+        review = Reviews(
+            full_name = request.form['full_name'],
+            review_text = request.form['review_text'],
+            album_id = secret_album.album_id,
+            rating = int(request.form['rating'])
+        )
+        try:
+            db.session.add(review)
+            db.session.commit()
+        except:
+            flash('Уже есть отзыв')
+            user = db.session.query(Users).filter_by(user_id=secret_album.user_id).first()
+            photos = db.session.query(Photos).filter_by(album_id=secret_album.album_id)
+            review = db.session.query(Reviews).filter_by(album_id=secret_album.album_id).first()
+            return render_template('photos_in_album.html', album_id=secret_album.album_id, 
+            nickname=user.nickname, photos=photos, is_album_from_code = True,
+            menu=menu, album_name=secret_album.album_name, review=review, 
+            is_customer=is_customer, is_not_toolbar = True)
+        is_customer = False
+        if current_user is not None:
+            is_customer = secret_album.user_id != current_user.user_id
+        user = db.session.query(Users).filter_by(user_id=secret_album.user_id).first()
+        photos = db.session.query(Photos).filter_by(album_id=secret_album.album_id)
+        review = db.session.query(Reviews).filter_by(album_id=secret_album.album_id).first()
+        return render_template('photos_in_album.html', album_id=secret_album.album_id, 
+        nickname=user.nickname, photos=photos, is_album_from_code = True,
+        menu=menu, album_name=secret_album.album_name, 
+        review=review, is_customer=is_customer, is_not_toolbar = True)
+
+    else:
+        if current_user is not None and secret_album.user_id == current_user.user_id:
+            flash('Автор не может оставлять сам себе отзыв')
+            return redirect(url_for('index'))
+        else:
+            return render_template('add_review.html', menu=menu, is_not_toolbar = True)
+            
+
 # получение альбома по коду
 @app.route('/album_from_code', methods=['GET', 'POST'])
 def album_from_code():
+    is_customer = True
+    if current_user is not None:
+        is_customer = secret_album.user_id != current_user.user_id
     if secret_album is None:
         return redirect(url_for('index'))
-    if request.method == 'POST':
-        pass
     else:
         user = db.session.query(Users).filter_by(user_id=secret_album.user_id).first()
         photos = db.session.query(Photos).filter_by(album_id=secret_album.album_id)
+        review = db.session.query(Reviews).filter_by(album_id=secret_album.album_id).first()
         return render_template('photos_in_album.html', album_id=secret_album.album_id, 
-        nickname=user.nickname, photos=photos, is_album_from_code = True,
-        menu=menu, album_name=secret_album.album_name, is_not_toolbar = True)
+        nickname=user.nickname, photos=photos, 
+        review=review, is_album_from_code = True,
+        menu=menu, album_name=secret_album.album_name, 
+        is_customer=is_customer, is_not_toolbar = True)
     
 
 # ввод кода
@@ -158,12 +211,14 @@ def get_photo(nickname, album_id, photo_id):
             return redirect(url_for('photos_of_current_user_album', album_id=album_id))
         if nickname != current_user.nickname:
             set_photo_action_menu(photo_id)
-            return redirect(url_for('get_photo', album_id=album_id, photo_id=photo_id, nickname = nickname))
+            return redirect(url_for('get_photo', album_id=album_id, 
+            photo_id=photo_id, nickname = nickname))
     is_auth = current_user is not None
     photo = db.session.query(Photos).filter_by(photo_id=photo_id).first()
     album_name = db.session.query(Albums).filter_by(album_id=album_id).first().album_name
     return render_template('photo.html', album_id=album_id, nickname=nickname, photo=photo,
-    menu=menu, album_name=album_name, is_auth=is_auth, is_not_toolbar = True, get_auth_user_like=get_auth_user_like)
+    menu=menu, album_name=album_name, is_auth=is_auth, 
+    is_not_toolbar = True, get_auth_user_like=get_auth_user_like)
 
 @app.route('/myalbums/<int:album_id>/<int:photo_id>', methods=['GET', 'POST'])
 def get_photo_current_user(album_id, photo_id):
@@ -176,11 +231,13 @@ def get_photo_current_user(album_id, photo_id):
             return redirect(url_for('photos_of_current_user_album', album_id=album_id))
         return redirect(url_for('get_photo_current_user', album_id=album_id, photo_id=photo_id))
     else:
-        print('ну и где, а это гет')
         photo = db.session.query(Photos).filter_by(photo_id=photo_id).first()
         album_name = db.session.query(Albums).filter_by(album_id=album_id).first().album_name
-        return render_template('photo.html', album_id=album_id, nickname=current_user.nickname, photo=photo,
-        menu=menu, album_name=album_name, is_auth = True, is_not_toolbar = True, photo_menu = True, get_auth_user_like=get_auth_user_like)
+        return render_template('photo.html', album_id=album_id, 
+        nickname=current_user.nickname, photo=photo,
+        menu=menu, album_name=album_name, is_auth = True, 
+        is_not_toolbar = True, photo_menu = True,
+        get_auth_user_like=get_auth_user_like)
 
 # удаление альбома
 @app.route('/myalbums/<int:album_id>/delete_album', methods=['GET', 'POST'])
@@ -196,10 +253,12 @@ def delete_album(album_id):
             db.session.commit()
             return redirect(url_for('my_albums'))
         else:
-            return redirect(url_for('photos_of_current_user_album', album_id=album_id))
+            return redirect(url_for('photos_of_current_user_album', 
+            album_id=album_id))
     else:
         if(current_user is not None):
-            return render_template('delete_confirm.html', nickname=current_user.nickname,
+            return render_template('delete_confirm.html', 
+            nickname=current_user.nickname,
                 menu=menu, album_id = album_id,
                 album_name = album_toolbar['Добавить фото']['album_name'], 
                 is_not_toolbar = True)
@@ -256,7 +315,8 @@ def add_photo_to_album(album_id):
         if len(request.form['photo_url']) > 0:
             photo_args = {
                 'photo_url': request.form['photo_url'],
-                'description':request.form['description'] if len(request.form['description']) > 0 else None,
+                'description':request.form['description'] \
+                if len(request.form['description']) > 0 else None,
                 'album_id': album_id,
             }
 
@@ -283,12 +343,12 @@ def add_photo_to_album(album_id):
 def my_albums():
     if(current_user is not None):
         print(current_user)
-        albums = db.session.query(Albums).filter_by(user_id=current_user.user_id)
+        albums = get_all_albums(db, current_user.nickname)
         return render_template(
             'user_albums.html',albums=albums, 
             nickname=current_user.nickname, menu=menu, 
             album_list_toolbar = album_list_toolbar, is_not_toolbar = False, 
-            albums_length = albums.count())
+            albums_length = len(albums))
     else:
         flash('Анонимный пользователь', 'error')
         return redirect(url_for('index'))
@@ -318,11 +378,14 @@ def add_album():
             flash(f'Поздравляем, альбом "{album.album_name}" создан!', 'success')
             return redirect(url_for('my_albums'))
         else:
-            flash('Неправильно введены данные: название альбома должно содержать не менее 6 символов', 'error')
+            flash('Неправильно введены данные: название \
+            альбома должно содержать не менее 6 символов', 'error')
     else:
         if(current_user is not None):
             print(current_user)
-            return render_template('add_album.html', nickname=current_user.nickname, menu=menu, is_not_toolbar = True)
+            return render_template('add_album.html', 
+            nickname=current_user.nickname, menu=menu, 
+            is_not_toolbar = True)
 
 # авторизация
 @app.route('/authorize', methods=['GET', 'POST'])
@@ -349,6 +412,13 @@ def authorize():
 def register():
     if request.method == 'POST':
         if len(request.form['nick']) > 4 and len(request.form['password']) > 7:
+            is_valid_nick = db.session.execute(f"select * from is_nick_valid('{request.form['nick']}')")\
+            .fetchone()[0]
+            print(is_valid_nick)
+            if not is_valid_nick:
+                flash('Псевдоним уже занят!')
+                return render_template('register.html', menu=menu, is_not_toolbar = True)
+
             user_args = {
                 'nickname': request.form['nick'],
                 'full_name':request.form['name'],
@@ -371,18 +441,14 @@ def register():
                 flash('Поздравляем, вы зареганы!', 'success')
                 return redirect(url_for('authorize'))
             except:
-                flash('Не удалось зарегаться (username уже есть в базе или пароль > 30 символов или телефон не российский)', 'error')
+                flash('Не удалось зарегаться \
+                (username уже есть в базе или пароль > 30 символов или телефон не российский)', 'error')
         else:
-            flash('Неправильно введены данные: username должен быть больше 4 символов, пароль должен быть больше 8 символов', 'error')
+            flash('Неправильно введены данные: username должен быть больше 4 символов,\
+             пароль должен быть больше 8 символов', 'error')
     
 
     return render_template('register.html', menu=menu, is_not_toolbar = True)
-
-@app.route('/test', methods=['GET'])
-def test():
-    return {
-        'test':'test1'
-    }
 
 # главная страница
 @app.route('/')
@@ -390,7 +456,6 @@ def index():
     allUsers = db.session.query(Users).all()
     return render_template('index.html', users=allUsers, menu=menu, is_not_toolbar = True)
 
-# пользовательские альбомы - добавить редирект при совпадении ников (nickname==currentNick => redirect)
 @app.route('/<string:nickname>/albums', methods=['GET'])
 def get_user_albums(nickname):
     global current_user
@@ -401,6 +466,20 @@ def get_user_albums(nickname):
         return render_template('user_albums.html',albums=albums, nickname=nickname,
         menu=menu, is_not_toolbar = True, albums_length = len(albums))
 
+@app.route('/<string:nickname>/albums/all_photos', methods=['GET'])
+def all_user_photos(nickname):
+    if current_user is not None and nickname == current_user.nickname:
+        return redirect(url_for('all_photos_of_current_user'))
+    photos = get_all_photos_of_user(db, nickname)
+    return render_template('all_user_photos.html', nickname=nickname, photos=photos,
+    menu=menu, album_name="Все фото", is_not_toolbar = True)
+
+@app.route('/myalbums/all_photos', methods=['GET'])
+def all_photos_of_current_user():
+    photos = get_all_photos_of_user(db, current_user.nickname)
+    return render_template('all_user_photos.html', nickname=current_user.nickname, photos=photos,
+    menu=menu, album_name="Все фото", is_not_toolbar = True)
+
 # пользовательские фото - аналогично при совпадении текущего никнейма
 @app.route('/<string:nickname>/albums/<int:album_id>', methods=['GET'])
 def get_album_photos(nickname, album_id):
@@ -408,8 +487,9 @@ def get_album_photos(nickname, album_id):
         return redirect(url_for('photos_of_current_user_album', album_id=album_id))
     photos = db.session.query(Photos).filter_by(album_id=album_id)
     album_name = db.session.query(Albums).filter_by(album_id=album_id).first().album_name
+    review = db.session.query(Reviews).filter_by(album_id=album_id).first()
     return render_template('photos_in_album.html', album_id=album_id, nickname=nickname, photos=photos,
-    menu=menu, album_name=album_name, is_not_toolbar = True)
+    menu=menu, album_name=album_name, review=review, is_not_toolbar = True)
 
 @app.route('/myalbums/<int:album_id>', methods=['GET'])
 def photos_of_current_user_album(album_id):
@@ -419,9 +499,12 @@ def photos_of_current_user_album(album_id):
                 album_toolbar[key]['album_id'] = album_id
         photos = db.session.query(Photos).filter_by(album_id=album_id)
         album = db.session.query(Albums).filter_by(album_id=album_id).first()
+        review = db.session.query(Reviews).filter_by(album_id=album_id).first()
         album_toolbar['Добавить фото']['album_name'] = album.album_name
-        return render_template('photos_in_album.html', album_id=album_id, nickname=current_user.nickname, photos=photos,
-        menu=menu, album_code=f'(код: {album.album_code})', album_name=album.album_name, album_toolbar=album_toolbar, is_not_toolbar = False)
+        return render_template('photos_in_album.html', album_id=album_id, 
+        nickname=current_user.nickname, photos=photos,
+        menu=menu, review=review, album_code=f'(код: {album.album_code})', 
+        album_name=album.album_name, album_toolbar=album_toolbar, is_not_toolbar = False)
     else:
         flash('Анонимный пользователь', 'error')
         return redirect(url_for('index'))
